@@ -1,3 +1,6 @@
-../Core/Src/IMU/IMU.c:7:6:StartDefaultTask	3
-../Core/Src/IMU/IMU.c:44:6:getGyroVals	3
-../Core/Src/IMU/IMU.c:67:6:calibrateGyro	4
+../Core/Src/IMU/IMU.c:7:6:StartDefaultTask	1
+../Core/Src/IMU/IMU.c:30:6:getGyroVals	3
+../Core/Src/IMU/IMU.c:54:6:getAccelVals	3
+../Core/Src/IMU/IMU.c:77:6:configIMU	3
+../Core/Src/IMU/IMU.c:99:6:calibrateGyro	4
+../Core/Src/IMU/IMU.c:130:6:calibrateAccel	7
