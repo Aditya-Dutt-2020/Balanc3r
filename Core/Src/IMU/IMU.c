@@ -1,10 +1,6 @@
 #include "IMU.h"
-/**
-  * @brief  Function implementing the defaultTask thread.
-  * @param  argument: Not used
-  * @retval None
-  */
-void StartDefaultTask(void *argument)
+
+void StartIMUDebugTask(void *argument)
 {
 	uint8_t buf[14];
 	configIMU(buf);
@@ -19,9 +15,10 @@ void StartDefaultTask(void *argument)
 
 	for(;;)
 	{
-		vec3 vals = getAccelVals(buf);
-		printf("x:%.5f\ty:%.5f\tz:%.5f\n", vals.x, vals.y, vals.z);
-		osDelay(30);
+//		vec3 vals = getAccelVals(buf);
+//		printf("x:%.5f\ty:%.5f\tz:%.5f\n", vals.x, vals.y, vals.z);
+
+		osDelay(1);
 	}
 	printf("Error?\n");
 	osThreadTerminate(NULL);

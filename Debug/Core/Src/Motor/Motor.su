@@ -1,0 +1,5 @@
+../Core/Src/Motor/Motor.c:3:6:StartMotorDebugTask	160	static
+../Core/Src/Motor/Motor.c:24:10:initMotors	224	static
+../Core/Src/Motor/Motor.c:34:6:initMotorStruct	24	static
+../Core/Src/Motor/Motor.c:51:6:setSpeed	16	static
+../Core/Src/Motor/Motor.c:61:6:getEncoder	16	static

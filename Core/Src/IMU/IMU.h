@@ -32,7 +32,7 @@ typedef struct {
 	double z;
 } vec3;
 
-void StartDefaultTask(void *argument);
+void StartIMUDebugTask(void *argument);
 void calibrateGyro(uint8_t* buf);
 void calibrateAccel(uint8_t* buf, int axis);
 void configIMU(uint8_t* buf);
