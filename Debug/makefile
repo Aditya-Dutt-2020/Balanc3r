@@ -17,6 +17,7 @@ RM := rm -rf
 -include Core/Startup/subdir.mk
 -include Core/Src/Motor/subdir.mk
 -include Core/Src/IMU/subdir.mk
+-include Core/Src/Control/subdir.mk
 -include Core/Src/subdir.mk
 -include objects.mk
 

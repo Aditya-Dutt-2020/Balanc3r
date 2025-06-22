@@ -31,6 +31,11 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "cmsis_os.h"
+#include <math.h>
+#include <stdlib.h>
+extern osMutexId_t i2cMutexHandle;
+
 extern I2C_HandleTypeDef hi2c1;
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;
@@ -40,11 +45,29 @@ extern TIM_HandleTypeDef htim8;
 extern UART_HandleTypeDef huart4;
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
+
+extern osMessageQueueId_t gyroQueueHandle;
+extern osMessageQueueId_t accelQueueHandle;
+extern osMessageQueueId_t encoderQueueHandle;
+extern osMessageQueueId_t motorSpeedQueueHandle;
+
+extern osEventFlagsId_t motorDebugFlagHandle;
+extern osEventFlagsId_t IMUDebugFlagHandle;
+extern osEventFlagsId_t controlDebugFlagHandle;
+#include <math.h>
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-
+typedef struct {
+	double x;
+	double y;
+	double z;
+} vec3;
+typedef struct {
+	double x;
+	double y;
+} vec2;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/

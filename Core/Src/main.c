@@ -25,6 +25,8 @@
 #include <string.h>
 #include <stdio.h>
 #include "IMU/IMU.h"
+#include "Motor/Motor.h"
+#include "Control/Control.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -59,7 +61,7 @@ osThreadId_t IMUDebugTaskHandle;
 const osThreadAttr_t IMUDebugTask_attributes = {
   .name = "IMUDebugTask",
   .stack_size = 190 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+  .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for MotorDebugTask */
 osThreadId_t MotorDebugTaskHandle;
@@ -67,6 +69,81 @@ const osThreadAttr_t MotorDebugTask_attributes = {
   .name = "MotorDebugTask",
   .stack_size = 150 * 4,
   .priority = (osPriority_t) osPriorityLow,
+};
+/* Definitions for IMUTask */
+osThreadId_t IMUTaskHandle;
+const osThreadAttr_t IMUTask_attributes = {
+  .name = "IMUTask",
+  .stack_size = 200 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+/* Definitions for ControlTask */
+osThreadId_t ControlTaskHandle;
+const osThreadAttr_t ControlTask_attributes = {
+  .name = "ControlTask",
+  .stack_size = 250 * 4,
+  .priority = (osPriority_t) osPriorityAboveNormal,
+};
+/* Definitions for EncoderTask */
+osThreadId_t EncoderTaskHandle;
+const osThreadAttr_t EncoderTask_attributes = {
+  .name = "EncoderTask",
+  .stack_size = 200 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+/* Definitions for MotorTask */
+osThreadId_t MotorTaskHandle;
+const osThreadAttr_t MotorTask_attributes = {
+  .name = "MotorTask",
+  .stack_size = 200 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+/* Definitions for ControlDebugTas */
+osThreadId_t ControlDebugTasHandle;
+const osThreadAttr_t ControlDebugTas_attributes = {
+  .name = "ControlDebugTas",
+  .stack_size = 200 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
+/* Definitions for gyroQueue */
+osMessageQueueId_t gyroQueueHandle;
+const osMessageQueueAttr_t gyroQueue_attributes = {
+  .name = "gyroQueue"
+};
+/* Definitions for accelQueue */
+osMessageQueueId_t accelQueueHandle;
+const osMessageQueueAttr_t accelQueue_attributes = {
+  .name = "accelQueue"
+};
+/* Definitions for encoderQueue */
+osMessageQueueId_t encoderQueueHandle;
+const osMessageQueueAttr_t encoderQueue_attributes = {
+  .name = "encoderQueue"
+};
+/* Definitions for motorSpeedQueue */
+osMessageQueueId_t motorSpeedQueueHandle;
+const osMessageQueueAttr_t motorSpeedQueue_attributes = {
+  .name = "motorSpeedQueue"
+};
+/* Definitions for i2cMutex */
+osMutexId_t i2cMutexHandle;
+const osMutexAttr_t i2cMutex_attributes = {
+  .name = "i2cMutex"
+};
+/* Definitions for motorDebugFlag */
+osEventFlagsId_t motorDebugFlagHandle;
+const osEventFlagsAttr_t motorDebugFlag_attributes = {
+  .name = "motorDebugFlag"
+};
+/* Definitions for IMUDebugFlag */
+osEventFlagsId_t IMUDebugFlagHandle;
+const osEventFlagsAttr_t IMUDebugFlag_attributes = {
+  .name = "IMUDebugFlag"
+};
+/* Definitions for controlDebugFlag */
+osEventFlagsId_t controlDebugFlagHandle;
+const osEventFlagsAttr_t controlDebugFlag_attributes = {
+  .name = "controlDebugFlag"
 };
 /* USER CODE BEGIN PV */
 //static const uint8_t MPU6050_ADDR = 0b1101000 << 1;
@@ -87,6 +164,11 @@ static void MX_TIM8_Init(void);
 static void MX_USART1_UART_Init(void);
 void StartIMUDebugTask(void *argument);
 void StartMotorDebugTask(void *argument);
+void StartIMUTask(void *argument);
+void StartControlTask(void *argument);
+void StartEncoderTask(void *argument);
+void StartMotorTask(void *argument);
+void ControlDebugTaskStart(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -139,6 +221,9 @@ int main(void)
 
   /* Init scheduler */
   osKernelInitialize();
+  /* Create the mutex(es) */
+  /* creation of i2cMutex */
+  i2cMutexHandle = osMutexNew(&i2cMutex_attributes);
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
@@ -152,6 +237,19 @@ int main(void)
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
 
+  /* Create the queue(s) */
+  /* creation of gyroQueue */
+  gyroQueueHandle = osMessageQueueNew (8, sizeof(vec3), &gyroQueue_attributes);
+
+  /* creation of accelQueue */
+  accelQueueHandle = osMessageQueueNew (8, sizeof(vec3), &accelQueue_attributes);
+
+  /* creation of encoderQueue */
+  encoderQueueHandle = osMessageQueueNew (8, sizeof(vec2), &encoderQueue_attributes);
+
+  /* creation of motorSpeedQueue */
+  motorSpeedQueueHandle = osMessageQueueNew (8, sizeof(int), &motorSpeedQueue_attributes);
+
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
@@ -163,9 +261,33 @@ int main(void)
   /* creation of MotorDebugTask */
   MotorDebugTaskHandle = osThreadNew(StartMotorDebugTask, NULL, &MotorDebugTask_attributes);
 
+  /* creation of IMUTask */
+  IMUTaskHandle = osThreadNew(StartIMUTask, NULL, &IMUTask_attributes);
+
+  /* creation of ControlTask */
+  ControlTaskHandle = osThreadNew(StartControlTask, NULL, &ControlTask_attributes);
+
+  /* creation of EncoderTask */
+  EncoderTaskHandle = osThreadNew(StartEncoderTask, NULL, &EncoderTask_attributes);
+
+  /* creation of MotorTask */
+  MotorTaskHandle = osThreadNew(StartMotorTask, NULL, &MotorTask_attributes);
+
+  /* creation of ControlDebugTas */
+  ControlDebugTasHandle = osThreadNew(ControlDebugTaskStart, NULL, &ControlDebugTas_attributes);
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
+
+  /* creation of motorDebugFlag */
+  motorDebugFlagHandle = osEventFlagsNew(&motorDebugFlag_attributes);
+
+  /* creation of IMUDebugFlag */
+  IMUDebugFlagHandle = osEventFlagsNew(&IMUDebugFlag_attributes);
+
+  /* creation of controlDebugFlag */
+  controlDebugFlagHandle = osEventFlagsNew(&controlDebugFlag_attributes);
 
   /* USER CODE BEGIN RTOS_EVENTS */
   /* add events, ... */
@@ -243,7 +365,29 @@ static void MX_I2C1_Init(void)
 {
 
   /* USER CODE BEGIN I2C1_Init 0 */
-
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+	__HAL_RCC_GPIOB_CLK_ENABLE();
+	GPIO_InitStruct.Pin = GPIO_PIN_8 | GPIO_PIN_9;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8 | GPIO_PIN_9, GPIO_PIN_SET);
+	HAL_Delay(1);
+	if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_9) == GPIO_PIN_RESET) {
+		for (int i = 0; i < 9; i++) {
+			// Clock SCL to release SDA
+			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_RESET);
+			HAL_Delay(1);
+			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);
+			HAL_Delay(1);
+		}
+	}
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET); // SCL high
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9, GPIO_PIN_SET); // SDA high
+	HAL_Delay(1);
+	HAL_GPIO_DeInit(GPIOB, GPIO_PIN_8 | GPIO_PIN_9);
+	printf("Bit banged\n");
   /* USER CODE END I2C1_Init 0 */
 
   /* USER CODE BEGIN I2C1_Init 1 */
@@ -294,7 +438,7 @@ static void MX_TIM1_Init(void)
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
-  sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
+  sConfig.IC1Polarity = TIM_ICPOLARITY_FALLING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
   sConfig.IC1Filter = 0;
@@ -401,8 +545,8 @@ static void MX_TIM3_Init(void)
   htim3.Init.Period = 65535;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  sConfig.EncoderMode = TIM_ENCODERMODE_TI1;
-  sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
+  sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
+  sConfig.IC1Polarity = TIM_ICPOLARITY_FALLING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
   sConfig.IC1Filter = 0;
@@ -687,6 +831,96 @@ __weak void StartMotorDebugTask(void *argument)
     osDelay(1);
   }
   /* USER CODE END StartMotorDebugTask */
+}
+
+/* USER CODE BEGIN Header_StartIMUTask */
+/**
+* @brief Function implementing the IMUTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartIMUTask */
+__weak void StartIMUTask(void *argument)
+{
+  /* USER CODE BEGIN StartIMUTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartIMUTask */
+}
+
+/* USER CODE BEGIN Header_StartControlTask */
+/**
+* @brief Function implementing the ControlTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartControlTask */
+__weak void StartControlTask(void *argument)
+{
+  /* USER CODE BEGIN StartControlTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartControlTask */
+}
+
+/* USER CODE BEGIN Header_StartEncoderTask */
+/**
+* @brief Function implementing the EncoderTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartEncoderTask */
+__weak void StartEncoderTask(void *argument)
+{
+  /* USER CODE BEGIN StartEncoderTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartEncoderTask */
+}
+
+/* USER CODE BEGIN Header_StartMotorTask */
+/**
+* @brief Function implementing the MotorTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartMotorTask */
+__weak void StartMotorTask(void *argument)
+{
+  /* USER CODE BEGIN StartMotorTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartMotorTask */
+}
+
+/* USER CODE BEGIN Header_ControlDebugTaskStart */
+/**
+* @brief Function implementing the ControlDebugTas thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_ControlDebugTaskStart */
+__weak void ControlDebugTaskStart(void *argument)
+{
+  /* USER CODE BEGIN ControlDebugTaskStart */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END ControlDebugTaskStart */
 }
 
 /**

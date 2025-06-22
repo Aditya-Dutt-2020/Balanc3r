@@ -1,6 +1,8 @@
-../Core/Src/IMU/IMU.c:3:6:StartIMUDebugTask	1
-../Core/Src/IMU/IMU.c:27:6:getGyroVals	3
-../Core/Src/IMU/IMU.c:51:6:getAccelVals	3
-../Core/Src/IMU/IMU.c:74:6:configIMU	3
-../Core/Src/IMU/IMU.c:96:6:calibrateGyro	4
-../Core/Src/IMU/IMU.c:127:6:calibrateAccel	7
+../Core/Src/IMU/IMU.c:3:6:StartIMUTask	1
+../Core/Src/IMU/IMU.c:36:8:getInitAngle	1
+../Core/Src/IMU/IMU.c:42:6:StartIMUDebugTask	1
+../Core/Src/IMU/IMU.c:71:6:getGyroVals	2
+../Core/Src/IMU/IMU.c:115:6:getAccelVals	2
+../Core/Src/IMU/IMU.c:157:6:configIMU	7
+../Core/Src/IMU/IMU.c:220:6:calibrateGyro	4
+../Core/Src/IMU/IMU.c:253:6:calibrateAccel	7

@@ -1,5 +1,7 @@
-../Core/Src/Motor/Motor.c:3:6:StartMotorDebugTask	160	static
-../Core/Src/Motor/Motor.c:24:10:initMotors	224	static
-../Core/Src/Motor/Motor.c:34:6:initMotorStruct	24	static
-../Core/Src/Motor/Motor.c:51:6:setSpeed	16	static
-../Core/Src/Motor/Motor.c:61:6:getEncoder	16	static
+../Core/Src/Motor/Motor.c:3:6:StartMotorTask	168	static
+../Core/Src/Motor/Motor.c:24:6:StartMotorDebugTask	280	static
+../Core/Src/Motor/Motor.c:39:6:StartEncoderTask	304	static
+../Core/Src/Motor/Motor.c:62:10:initMotors	312	static
+../Core/Src/Motor/Motor.c:72:6:initMotorStruct	24	static
+../Core/Src/Motor/Motor.c:93:6:setSpeed	16	static
+../Core/Src/Motor/Motor.c:104:8:getDist	32	static
